@@ -1,0 +1,31 @@
+from pydantic import ValidationError
+
+from database.models import User
+from database.repositories.user_repo import UserRepo
+from utils import password
+from utils.validators import ValidateSignupRequest
+
+
+def signup(repo: UserRepo, username, email, firstname, lastname, plain_password) -> User:
+    try:
+        ValidateSignupRequest(
+            username=username,
+            email=email,
+            first_name=firstname,
+            last_name=lastname,
+            password=plain_password
+        )
+    except ValidationError as e:
+        field_errors = {err["loc"][0]: err["msg"] for err in e.errors()}
+        raise ValueError(field_errors)
+    hashed = password.generate_hash(plain_password)
+    new_user = User(
+        id=None,
+        username=username,
+        email=email,
+        first_name=firstname,
+        last_name=lastname,
+        password_hash=hashed,
+        created_at=None
+    )
+    return repo.create_user(new_user)
