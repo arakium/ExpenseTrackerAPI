@@ -3,7 +3,7 @@ from database.repositories.base_repo import BaseRepo
 from database.models import Expense
 class ExpenseRepo(BaseRepo):
 
-    def get_expenses(self, user_id: int, limit: int = 10) -> list[Expense]:
+    def get_expenses(self, user_id: int, limit: int | None = None) -> list[Expense]:
         rows = self._fetch_all("""
             SELECT * FROM expenses
             WHERE user_id = %s
