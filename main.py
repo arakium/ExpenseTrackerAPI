@@ -3,7 +3,8 @@ from flask import Flask, request, jsonify
 
 from database.database import get_connection
 from database.repositories.user_repo import UserRepo
-from services import user_service, auth_service
+from services import user_service
+from services.auth_service import login as auth_login
 
 app = Flask(__name__)
 
@@ -34,4 +35,10 @@ def signup():
 
 @app.route("/login", methods=["POST"])
 def login():
-    ...
+    data = request.get_json()
+    repo = UserRepo(get_connection())
+    try:
+        token = auth_login(repo, data.get("identifier"), data.get("password"))
+        return jsonify({"token": token}), 200
+    except ValueError as e:
+        return jsonify({"error": e.args[0]}), 401
