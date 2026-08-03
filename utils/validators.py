@@ -26,10 +26,9 @@ class ValidateSignupRequest(BaseModel):
     password: str = Field(min_length=8)
 
 
-class ValidateLoginrequest(BaseModel):
+class ValidateLoginRequest(BaseModel):
     model_config = ConfigDict(
         str_strip_whitespace=True,
-        str_to_lower=True,
     )
     identifier: str = Field(min_length=1)
     password: str = Field(min_length=8)
