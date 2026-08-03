@@ -6,14 +6,14 @@ from pydantic import ValidationError
 from database.repositories.user_repo import UserRepo
 from utils import password
 from utils.auth import encode_jwt, decode_jwt
-from utils.validators import ValidateLoginrequest
+from utils.validators import ValidateLoginRequest
 
 
 
 
 def login(repo: UserRepo, identifier: str, plain_password: str) -> str:
     try:
-        ValidateLoginrequest(
+        ValidateLoginRequest(
             identifier=identifier,
             password=plain_password,
         )
