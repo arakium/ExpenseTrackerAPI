@@ -11,8 +11,7 @@ class ExpenseRepo(BaseRepo):
             LIMIT %s
         """, (user_id, limit))
 
-        return [Expense(*row) for row in rows]
-
+        return [Expense.from_dict(row) for row in rows]
 
     def create_expense(self, expense: Expense) -> None:
         self._execute("""
