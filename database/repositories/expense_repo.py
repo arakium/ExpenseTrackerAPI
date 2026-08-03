@@ -25,7 +25,7 @@ class ExpenseRepo(BaseRepo):
             SET
                 cost = %s,
                 description = %s,
-                category_id = %s,
+                category_id = %s
             WHERE id = %s
         """, (new_expense.cost, new_expense.description, new_expense.category_id, expense_id))
 
