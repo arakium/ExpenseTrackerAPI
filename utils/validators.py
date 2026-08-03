@@ -10,7 +10,7 @@ class ValidateSignupRequest(BaseModel):
     username: str = Field(
         min_length=1,
         max_length=30,
-        pattern=r"^[a-zA-Z0-9_]+$"  # only letters, numbers, underscores
+        pattern=r"^[a-z0-9_]+$"  # only letters, numbers, underscores
     )
     email: EmailStr
     first_name: str = Field(
