@@ -5,7 +5,6 @@ from pydantic import BaseModel, EmailStr, Field, ValidationError, ConfigDict
 class ValidateSignupRequest(BaseModel):
     model_config = ConfigDict(
         str_strip_whitespace=True,
-        str_to_lower=True,
     )
     username: str = Field(
         min_length=1,
