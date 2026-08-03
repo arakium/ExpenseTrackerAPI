@@ -15,7 +15,7 @@ def encode_jwt(user_id: int) -> str:
 
     return jwt.encode(
         payload={
-            "sub": user_id,
+            "sub": str(user_id),
             "iat": now,
             "nbf": now,
             "exp": now + timedelta(weeks=4),
