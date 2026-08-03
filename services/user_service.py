@@ -18,13 +18,13 @@ def signup(repo: UserRepo, username: str, email: str, firstname: str, lastname: 
     except ValidationError as e:
         field_errors = {err["loc"][0]: err["msg"] for err in e.errors()}
         raise ValueError(field_errors)
-    hashed = password.generate_hash(plain_password)
+    hashed = password.generate_hash(plain_password.strip())
     new_user = User(
         id=None,
-        username=username,
-        email=email,
-        first_name=firstname,
-        last_name=lastname,
+        username=username.strip(),
+        email=email.strip(),
+        first_name=firstname.strip(),
+        last_name=lastname.strip(),
         password_hash=hashed,
         created_at=None
     )
