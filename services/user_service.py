@@ -6,7 +6,7 @@ from utils import password
 from utils.validators import ValidateSignupRequest
 
 
-def signup(repo: UserRepo, username, email, firstname, lastname, plain_password) -> User:
+def signup(repo: UserRepo, username: str, email: str, firstname: str, lastname: str, plain_password: str) -> User:
     try:
         ValidateSignupRequest(
             username=username,
