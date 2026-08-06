@@ -11,6 +11,19 @@ from utils.date_filter import filter_date
 
 app = Flask(__name__)
 
+
+def _require_json_object():
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict):
+        raise ValidationError("Request body must be a JSON object.")
+    return data
+
+
+def _require_fields(data: dict, fields: tuple[str, ...]) -> None:
+    missing = [field for field in fields if field not in data]
+    if missing:
+        raise ValidationError({field: "This field is required." for field in missing})
+
 @app.errorhandler(AppError)
 def handle_app_error(e: AppError):
     """Catches ANY AppError raised anywhere in the app and formats it."""
@@ -18,7 +31,7 @@ def handle_app_error(e: AppError):
 
 @app.route("/signup", methods=["POST"])
 def signup_route():
-    data = request.get_json()
+    data = _require_json_object()
     repo = UserRepo(get_connection())
     user = user_service.signup(
         repo,
@@ -32,7 +45,7 @@ def signup_route():
 
 @app.route("/login", methods=["POST"])
 def login_route():
-    data = request.get_json()
+    data = _require_json_object()
     repo = UserRepo(get_connection())
     token = login(repo, data.get("identifier"), data.get("password"))
     return jsonify({"token": token}), 200
@@ -52,6 +65,8 @@ def get_expenses_route():
             limit = int(limit_str)
         except ValueError:
             raise ValidationError("limit must be a valid integer.")
+        if limit < 1:
+            raise ValidationError("limit must be greater than 0.")
     repo = ExpenseRepo(get_connection())
     expenses = repo.get_expenses(user_id, start_date, end_date, limit)
     return jsonify([expense.to_dict() for expense in expenses]), 200
@@ -60,7 +75,8 @@ def get_expenses_route():
 def create_expense_route():
     auth_header = request.headers.get("Authorization")
     user_id = get_current_user_id(auth_header)
-    data = request.get_json()
+    data = _require_json_object()
+    _require_fields(data, ("cost", "category_id"))
     repo = ExpenseRepo(get_connection())
     expense = add_expense(
         repo=repo,
@@ -69,7 +85,7 @@ def create_expense_route():
         category_id= data.get("category_id"),
         user_id = user_id
     )
-    return jsonify(expense.to_dict()), 200
+    return jsonify(expense.to_dict()), 201
 
 @app.route ("/expenses/<int:expense_id>", methods=["DELETE"])
 def delete_expense_route(expense_id):
@@ -83,12 +99,17 @@ def delete_expense_route(expense_id):
 def update_expense_route(expense_id):
     auth_header = request.headers.get("Authorization")
     user_id = get_current_user_id(auth_header)
-    data = request.get_json()
+    data = _require_json_object()
+    _require_fields(data, ("cost", "category_id"))
 
     repo = ExpenseRepo(get_connection())
-    updated_expense = Expense.from_dict(data)
-    updated_expense.id = expense_id          
-    updated_expense.user_id = user_id
+    updated_expense = Expense(
+        id=expense_id,
+        user_id=user_id,
+        cost=data["cost"],
+        description=data.get("description"),
+        category_id=data["category_id"],
+    )
 
     result = expense_service.update_expense(repo, updated_expense)
     return jsonify(result.to_dict()), 200

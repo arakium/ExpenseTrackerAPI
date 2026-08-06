@@ -11,15 +11,15 @@ class CategoryRepo(BaseRepo):
             SELECT * FROM categories
         """)
 
-        return [Category(*rows) for row in rows]
+        return [Category.from_dict(row) for row in rows]
 
 
     def create_category(self, new_category: Category) -> None:
 
         self._execute("""
-            INSERT INTO categories(id, name)
-            VALUES (%s, %s)
-        """, (new_category.id, new_category.name))
+            INSERT INTO categories(name)
+            VALUES (%s)
+        """, (new_category.name,))
 
 
     def update_category(self, updated_category: Category, initial_category_id: int) -> None:

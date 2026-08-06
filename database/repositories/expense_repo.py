@@ -1,4 +1,4 @@
-from datetime import date
+from datetime import date, timedelta
 from typing import LiteralString, cast, Any
 
 import psycopg
@@ -23,8 +23,8 @@ class ExpenseRepo(BaseRepo):
             query += " AND created_at >= %s"
             params.append(start_date)
         if end_date is not None:
-            query += " AND created_at <= %s"
-            params.append(end_date)
+            query += " AND created_at < %s"
+            params.append(end_date + timedelta(days=1))
 
         query += " ORDER BY created_at DESC"
         if limit is not None:

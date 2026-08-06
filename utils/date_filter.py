@@ -25,4 +25,6 @@ def filter_date(request: Request, filter_type: str) -> tuple:
             end_date = date.fromisoformat(end_str)
         except ValueError:
             raise ValidationError({"error": "Dates must be in YYYY-MM-DD format."})
+    else:
+        raise ValidationError({"error": f"Unsupported filter type: {filter_type}"})
     return start_date, end_date
