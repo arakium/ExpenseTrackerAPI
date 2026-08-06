@@ -125,3 +125,7 @@ Run all tests:
 ```bash
 python -m pytest -q
 ```
+
+---
+
+Project idea by [Roadmap.sh](https://roadmap.sh/projects/expense-tracker-api)
