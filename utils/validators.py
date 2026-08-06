@@ -1,3 +1,4 @@
+from decimal import Decimal
 
 from pydantic import BaseModel, EmailStr, Field, ValidationError, ConfigDict
 
@@ -31,5 +32,15 @@ class ValidateLoginRequest(BaseModel):
     )
     identifier: str = Field(min_length=1)
     password: str = Field(min_length=8)
+
+
+class ValidateExpenseRequest(BaseModel):
+    model_config = ConfigDict(
+        str_strip_whitespace=True
+    )
+    cost: Decimal = Field(max_digits=12, decimal_places=2, gt=0)
+    description: str | None = Field(max_length=60)
+    category_id: int = Field(gt=0)
+    user_id: int = Field(gt=0)
 
 
