@@ -45,6 +45,17 @@ class ExpenseRepo(BaseRepo):
         )
         return owner_id["user_id"] if owner_id is not None else None
 
+    def get_expense_by_id(self, expense_id: int) -> Expense | None:
+        data = self._fetch_one(
+            """
+            SELECT * 
+            FROM expenses
+            WHERE id = %s
+            """,
+            (expense_id,),
+        )
+        return Expense.from_dict(data) if data is not None else None
+
     def create_expense(self, expense: Expense) -> Expense:
         try:
             data = self._fetch_one("""

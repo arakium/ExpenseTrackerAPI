@@ -113,23 +113,129 @@ def test_update_expense_route_rejects_missing_body(monkeypatch):
     assert response.get_json() == {"error": "Request body must be a JSON object."}
 
 
-def test_update_expense_route_rejects_missing_required_fields(monkeypatch):
+def test_update_expense_route_preserves_existing_description_when_omitted(monkeypatch):
+    captured = {}
+
+    class FakeExpenseRepo:
+        def __init__(self, _connection):
+            pass
+
+        def get_expense_by_id(self, expense_id):
+            expense = FakeExpense()
+            expense.id = expense_id
+            expense.description = "Existing description"
+            return expense
+
+    def fake_update_expense(_repo, updated_expense):
+        captured["description"] = updated_expense.description
+        return updated_expense
+
+    monkeypatch.setattr(app_module, "get_connection", lambda: object())
     monkeypatch.setattr(app_module, "get_current_user_id", lambda auth_header: 1)
+    monkeypatch.setattr(app_module, "ExpenseRepo", FakeExpenseRepo)
+    monkeypatch.setattr(app_module.expense_service, "update_expense", fake_update_expense)
 
     client = app_module.app.test_client()
     response = client.put(
         "/expenses/7",
         headers={"Authorization": "Bearer token"},
-        json={"description": "Lunch"},
+        json={"cost": "20.00", "category_id": 2},
     )
 
-    assert response.status_code == 400
-    assert response.get_json() == {
-        "error": {
-            "cost": "This field is required.",
-            "category_id": "This field is required.",
-        }
-    }
+    assert response.status_code == 200
+    assert captured["description"] == "Existing description"
+    assert response.get_json()["description"] == "Existing description"
+
+
+def test_update_expense_route_preserves_existing_cost_when_omitted(monkeypatch):
+    captured = {}
+
+    class FakeExpenseRepo:
+        def __init__(self, _connection):
+            pass
+
+        def get_expense_by_id(self, expense_id):
+            expense = FakeExpense()
+            expense.id = expense_id
+            expense.cost = Decimal("19.99")
+            return expense
+
+    def fake_update_expense(_repo, updated_expense):
+        captured["cost"] = updated_expense.cost
+        return updated_expense
+
+    monkeypatch.setattr(app_module, "get_connection", lambda: object())
+    monkeypatch.setattr(app_module, "get_current_user_id", lambda auth_header: 1)
+    monkeypatch.setattr(app_module, "ExpenseRepo", FakeExpenseRepo)
+    monkeypatch.setattr(app_module.expense_service, "update_expense", fake_update_expense)
+
+    client = app_module.app.test_client()
+    response = client.put(
+        "/expenses/7",
+        headers={"Authorization": "Bearer token"},
+        json={"category_id": 2, "description": "Updated"},
+    )
+
+    assert response.status_code == 200
+    assert captured["cost"] == Decimal("19.99")
+    assert response.get_json()["cost"] == "19.99"
+
+
+def test_update_expense_route_preserves_existing_category_when_omitted(monkeypatch):
+    captured = {}
+
+    class FakeExpenseRepo:
+        def __init__(self, _connection):
+            pass
+
+        def get_expense_by_id(self, expense_id):
+            expense = FakeExpense()
+            expense.id = expense_id
+            expense.category_id = 9
+            return expense
+
+    def fake_update_expense(_repo, updated_expense):
+        captured["category_id"] = updated_expense.category_id
+        return updated_expense
+
+    monkeypatch.setattr(app_module, "get_connection", lambda: object())
+    monkeypatch.setattr(app_module, "get_current_user_id", lambda auth_header: 1)
+    monkeypatch.setattr(app_module, "ExpenseRepo", FakeExpenseRepo)
+    monkeypatch.setattr(app_module.expense_service, "update_expense", fake_update_expense)
+
+    client = app_module.app.test_client()
+    response = client.put(
+        "/expenses/7",
+        headers={"Authorization": "Bearer token"},
+        json={"cost": "10.00", "description": "Updated"},
+    )
+
+    assert response.status_code == 200
+    assert captured["category_id"] == 9
+    assert response.get_json()["category_id"] == 9
+
+
+def test_update_expense_route_returns_not_found_when_partial_update_target_missing(monkeypatch):
+    class FakeExpenseRepo:
+        def __init__(self, _connection):
+            pass
+
+        def get_expense_by_id(self, expense_id):
+            return None
+
+    monkeypatch.setattr(app_module, "get_connection", lambda: object())
+    monkeypatch.setattr(app_module, "get_current_user_id", lambda auth_header: 1)
+    monkeypatch.setattr(app_module, "ExpenseRepo", FakeExpenseRepo)
+
+    client = app_module.app.test_client()
+    response = client.put(
+        "/expenses/999",
+        headers={"Authorization": "Bearer token"},
+        json={"description": "Updated"},
+    )
+
+    assert response.status_code == 404
+    assert response.get_json() == {"error": "Expense doesn't exist."}
 
 
 def test_get_expenses_route_rejects_negative_limit(monkeypatch):

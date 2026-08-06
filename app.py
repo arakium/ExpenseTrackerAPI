@@ -3,7 +3,7 @@ from database.database import get_connection
 from database.models import Expense
 from database.repositories.expense_repo import ExpenseRepo
 from database.repositories.user_repo import UserRepo
-from exceptions import AppError, ValidationError
+from exceptions import AppError, ValidationError, NotFoundError
 from services import user_service, expense_service
 from services.auth_service import login, get_current_user_id
 from services.expense_service import add_expense
@@ -100,15 +100,20 @@ def update_expense_route(expense_id):
     auth_header = request.headers.get("Authorization")
     user_id = get_current_user_id(auth_header)
     data = _require_json_object()
-    _require_fields(data, ("cost", "category_id"))
 
     repo = ExpenseRepo(get_connection())
+    existing_expense = None
+    if "cost" not in data or "category_id" not in data or "description" not in data:
+        existing_expense = repo.get_expense_by_id(expense_id)
+        if existing_expense is None:
+            raise NotFoundError("Expense doesn't exist.")
+
     updated_expense = Expense(
         id=expense_id,
         user_id=user_id,
-        cost=data["cost"],
-        description=data.get("description"),
-        category_id=data["category_id"],
+        cost=data["cost"] if "cost" in data else existing_expense.cost,
+        description=data["description"] if "description" in data else existing_expense.description,
+        category_id=data["category_id"] if "category_id" in data else existing_expense.category_id,
     )
 
     result = expense_service.update_expense(repo, updated_expense)
