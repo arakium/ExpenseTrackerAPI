@@ -3,9 +3,9 @@ from typing import LiteralString, cast, Any
 
 import psycopg
 
-from database.repositories.base_repo import BaseRepo
 from database.models import Expense
-from exceptions import NotFoundError, ValidationError
+from database.repositories.base_repo import BaseRepo
+from exceptions import ValidationError
 
 
 class ExpenseRepo(BaseRepo):

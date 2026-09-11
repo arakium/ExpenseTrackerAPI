@@ -1,14 +1,14 @@
 from typing import cast
-from exceptions import ValidationError, format_pydantic_errors, AuthenticationError
+
 import jwt
 from jwt import ExpiredSignatureError
 from pydantic import ValidationError as PydanticValidationError
+
 from database.repositories.user_repo import UserRepo
+from exceptions import ValidationError, format_pydantic_errors, AuthenticationError
 from utils import password
 from utils.auth import encode_jwt, decode_jwt
 from utils.validators import ValidateLoginRequest
-
-
 
 
 def login(repo: UserRepo, identifier: str, plain_password: str) -> str:

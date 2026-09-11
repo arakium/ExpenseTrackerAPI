@@ -1,4 +1,7 @@
+from functools import wraps
+
 from flask import Flask, request, jsonify
+
 from database.database import get_connection
 from database.models import Expense
 from database.repositories.expense_repo import ExpenseRepo
@@ -18,6 +21,13 @@ def _require_json_object():
         raise ValidationError("Request body must be a JSON object.")
     return data
 
+def auth_required(f):
+    @wraps(f)
+    def decorated(*args, **kwargs):
+        auth_header = request.headers.get("Authorization")
+        user_id = get_current_user_id(auth_header)
+        return f(user_id=user_id, *args, **kwargs)
+    return decorated
 
 def _require_fields(data: dict, fields: tuple[str, ...]) -> None:
     missing = [field for field in fields if field not in data]
@@ -51,9 +61,8 @@ def login_route():
     return jsonify({"token": token}), 200
 
 @app.route ("/expenses", methods=["GET"])
-def get_expenses_route():
-    auth_header = request.headers.get("Authorization")
-    user_id = get_current_user_id(auth_header)
+@auth_required
+def get_expenses_route(user_id: int):
     filter_type = request.args.get("filter")
     start_date, end_date = None, None
     if filter_type is not None:
@@ -72,9 +81,8 @@ def get_expenses_route():
     return jsonify([expense.to_dict() for expense in expenses]), 200
 
 @app.route ("/expenses", methods=["POST"])
-def create_expense_route():
-    auth_header = request.headers.get("Authorization")
-    user_id = get_current_user_id(auth_header)
+@auth_required
+def create_expense_route(user_id: int):
     data = _require_json_object()
     _require_fields(data, ("cost", "category_id"))
     repo = ExpenseRepo(get_connection())
@@ -88,17 +96,13 @@ def create_expense_route():
     return jsonify(expense.to_dict()), 201
 
 @app.route ("/expenses/<int:expense_id>", methods=["DELETE"])
-def delete_expense_route(expense_id):
-    auth_header = request.headers.get("Authorization")
-    user_id = get_current_user_id(auth_header)
+def delete_expense_route(user_id: int, expense_id: int):
     repo = ExpenseRepo(get_connection())
     expense_service.delete_expense(repo, user_id, expense_id)
     return "", 204
 
 @app.route("/expenses/<int:expense_id>", methods=["PUT"])
-def update_expense_route(expense_id):
-    auth_header = request.headers.get("Authorization")
-    user_id = get_current_user_id(auth_header)
+def update_expense_route(user_id: int, expense_id: int):
     data = _require_json_object()
 
     repo = ExpenseRepo(get_connection())

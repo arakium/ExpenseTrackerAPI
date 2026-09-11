@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from pydantic import BaseModel, EmailStr, Field, ValidationError, ConfigDict
+from pydantic import BaseModel, EmailStr, Field, ConfigDict
 
 
 class ValidateSignupRequest(BaseModel):

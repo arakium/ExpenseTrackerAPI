@@ -1,6 +1,6 @@
+import os
 from datetime import datetime, timedelta, timezone
 from typing import Any
-import os
 
 import jwt
 from dotenv import find_dotenv, load_dotenv

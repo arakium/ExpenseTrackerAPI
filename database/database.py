@@ -1,6 +1,7 @@
 """Setup main database and tables using PostgreSQL."""
-from config.db_config import database_config
 import psycopg
+
+from config.db_config import database_config
 
 
 def get_connection() -> psycopg.Connection:

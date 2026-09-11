@@ -1,10 +1,11 @@
 
+from pydantic import ValidationError as PydanticValidationError
+
 from database.models import User
 from database.repositories.user_repo import UserRepo
+from exceptions import ValidationError, format_pydantic_errors
 from utils import password
 from utils.validators import ValidateSignupRequest
-from pydantic import ValidationError as PydanticValidationError
-from exceptions import ValidationError, format_pydantic_errors
 
 
 def signup(repo: UserRepo, username: str, email: str, firstname: str, lastname: str, plain_password: str) -> User:

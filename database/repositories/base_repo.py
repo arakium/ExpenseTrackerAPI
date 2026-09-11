@@ -1,4 +1,5 @@
 from typing import LiteralString
+
 import psycopg
 from psycopg.rows import dict_row
 
